@@ -1,0 +1,136 @@
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH -n 4
+#SBATCH -t 0-00:15                  # wall time (D-HH:MM)
+#SBATCH -e slurm.%j.err
+
+# Load GROMACS module
+#this is what was used for the project
+module load gromacs/2018.1
+
+
+
+## 1. System Preparation
+
+#Create a simulation box around the complex
+gmx editconf -f complex.pdb -box 4 4 4 -o box.gro
+
+#Solvate the box with water
+gmx solvate -cs -cp box.gro -p complex.top -o solv.gro
+
+
+## 2. Energy Minimization and Ions
+
+#Preprocess for ion addition
+gmx grompp -f em.mdp -c solv.gro -p complex.top -o tmp.tpr -maxwarn 1
+
+#Add ions to neutralize and set 0.01 M concentration
+gmx genion -s tmp.tpr -p fade_charge.top -neutral -conc 0.01 -o ions.gro
+
+
+#once system is prepared...solvated and ions are included in a structure "ions.gro"
+
+# -------------------------------------------------------
+# STEP 1: ENERGY MINIMIZATION
+# -------------------------------------------------------
+gmx grompp -f em.mdp -c ions.gro -p complex.top -o em.tpr -maxwarn 1
+gmx mdrun -deffnm em
+
+# -------------------------------------------------------
+# STEP 2: NPT EQUILIBRATION
+# -------------------------------------------------------
+gmx grompp -f equi.mdp -c em.gro -r em.gro -p complex.top -o equi-NPT.tpr -maxwarn 1
+gmx mdrun -v -nt 4 -deffnm equi-NPT
+
+# ----------------------------------------------
+# STEP 1: Rotate first dihedral (dihe-NPT)
+# ----------------------------------------------
+# Create .tpr for first dihedral rotation
+gmx grompp -f dihe-NPT.mdp \
+           -c pre-dihe-NPT.gro -r pre-dihe-NPT.gro \
+           -p complex.top \
+           -o dihe-NPT.tpr \
+           -n index.ndx -maxwarn 1
+
+# Run the simulation rotating the first dihedral
+gmx mdrun -v -nt 4 -deffnm dihe-NPT
+
+# ----------------------------------------------
+# STEP 2: Extract 8 seed snapshots from Step 1
+# ----------------------------------------------
+# Extract frames every 25 steps, writing st_0.gro ... st_7.gro
+gmx trjconv -s dihe-NPT.tpr -f dihe-NPT.trr -sep -skip 25 -o st_.gro <<STOP
+0
+STOP
+
+# Make 8 directories (snapshot0..snapshot7) and move corresponding .gro files there
+i=0
+while [ $i -le 7 ]; do
+    mkdir snapshot${i}
+    mv st_${i}.gro snapshot${i}/
+    cp run_md.sh snapshot${i}/
+    cp rot_other-NPT.mdp snapshot${i}/
+    cp index.ndx snapshot${i}/
+    ((i++))
+done
+
+# ----------------------------------------------
+# STEP 3: Rotate second dihedral (rot_other-NPT) for each snapshot
+# ----------------------------------------------
+i=0
+while [ $i -le 7 ]; do
+    cd snapshot${i}
+    # Create .tpr for second dihedral rotation
+    gmx grompp -maxwarn 2 \
+               -f rot_other-NPT.mdp \
+               -c st_${i}.gro -r st_${i}.gro \
+               -p ../complex.top \
+               -o rot_other-NPT.tpr \
+               -n ../index.ndx
+    # Run the simulation rotating the second dihedral
+    gmx mdrun -v -nt 4 -deffnm rot_other-NPT
+    cd ..
+    ((i++))
+done
+
+# ----------------------------------------------
+# STEP 4: Extract 8 umbrella sampling starting structures from each snapshot
+# ----------------------------------------------
+i=0
+while [ $i -le 7 ]; do
+    cd snapshot${i}
+    # Extract frames every 25 steps from second dihedral run
+    gmx trjconv -s rot_other-NPT.tpr -f rot_other-NPT.trr -sep -skip 25 -o us_.gro <<STOP
+0
+STOP
+
+    # For each extracted frame, create a run script and launch
+    j=0
+    while [ $j -le 7 ]; do
+        sed "s/XXX/${j}/g" ../runXXX.sh > run-${j}.sh
+        bash run-${j}.sh &
+        ((j++))
+    done
+    cd ..
+    ((i++))
+done
+
+# ----------------------------------------------
+# STEP 5: Collect pullx output files into one directory
+# ----------------------------------------------
+mkdir -p output_xvg_for_2D_wham
+x=0
+count=0
+while [ $x -le 7 ] ; do
+    dir=snapshot${x}
+    j=0
+    while [ $j -le 7 ]; do
+        cp $dir/us_${j}_pullx.xvg small_lowk/us_${count}_pullx.xvg
+        ((count++))
+        ((j++))
+    done
+    ((x++))
+done
+
+#once this step is finished, we download this entire directory of xvg's and perform 2Dwham locally
+

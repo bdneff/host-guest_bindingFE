@@ -1,0 +1,87 @@
+# Alchemical Free Energy Simulation Workflow
+
+This README describes the setup and execution of an alchemical free energy simulation using GROMACS (optionally patched with PLUMED). The workflow includes system preparation, solvation, energy minimization, and alchemical transformation legs (electrostatics, Lennard-Jones, and restraints).
+
+---
+
+## Set GROMACS Executable
+
+At the top of your script, define:
+gmx=gmx
+
+If you're using a PLUMED-patched GROMACS:
+gmx=gmx_plumed
+
+---
+
+## 1. System Preparation
+
+1.1 Create a simulation box around the complex  
+$gmx editconf -f complex-trans.pdb -box 8 4 4 -o box.gro
+
+1.2 Solvate the box with water  
+$gmx solvate -cs -cp box.gro -p fade_charge.top -o solv.gro  
+- `fade_charge.top` defines the initial state: bound guest has charges ON, unbound has charges OFF  
+- Includes topology files: `host-phos.itp`, `guest1-0.itp`, `guest0-1.itp`
+
+---
+
+## 2. Energy Minimization and Ions
+
+2.1 Preprocess for ion addition  
+$gmx grompp -f em.mdp -c solv.gro -p fade_charge.top -o tmp.tpr -maxwarn 1
+
+2.2 Add ions to neutralize and set 0.01 M concentration  
+$gmx genion -s tmp.tpr -p fade_charge.top -neutral -conc 0.01 -o ions.gro
+
+2.3 Perform energy minimization  
+$gmx grompp -f em.mdp -c ions.gro -p fade_charge.top -o em.tpr -maxwarn 1  
+$gmx mdrun -v -nt 1 -deffnm em
+
+---
+
+## 3. Equilibration
+
+3.1 Create index file (manual step)  
+- Generate an `index.ndx` with 3 coupling groups (solvent, complex, unbound guest) 
+- These also include grouops containing single atoms needed for restraints in alchemical simulations
+- not sure if we can automate this, or if we actually do need these one atom groups, but haven't found another way
+
+3.2 Run equilibration  
+$gmx grompp -f equi.mdp -c em.gro -p fade_charge.top -o equi.tpr -n index.ndx -maxwarn 3
+
+---
+
+## 4. Alchemical Free Energy Calculation
+
+### 4.1 Electrostatics Leg (Charge Decoupling)
+
+mkdir charge  
+cd charge  
+cp ../alchemical-XXX.mdp .  
+- alchemical-XXX.mdp will specifiy each lambda stratefication. Then it specifies which index in the list of stratefications will be used for the current simulation.
+
+cp ../runXXX.sh
+bash ../make_lambdas.sh  
+bash ../make_runs.sh  
+bash ../run_all.sh  
+
+- This leg switches electrostatics via `fade_charge.top`  
+- Make sure `.mdp` files are properly set for each lambda value
+
+---
+
+## 5. Other Alchemical Legs
+
+- `lj/`: Lennard-Jones decoupling using `fade_lj.top`
+- `final/`: Restraint decoupling using `fade_final.top`
+	- 'final' simulations must use release-XXX.mdp instead of alchemical-XXX.mdp
+---
+
+## Notes
+
+- Always verify restraint definitions (atom order, angles, dihedrals)
+- Index creation can be partially automated, but manual checks are strongly recommended
+
+
+#umbrella sampling for a particular system instructions in the `sample_2D_us' directory

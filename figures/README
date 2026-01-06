@@ -1,0 +1,17 @@
+each directory contains a script to generate a TYPE or category of plot
+- 100ns_observation_plots contains scripts to generate plots from 100ns unbiased MD
+- FEP_plots contains scripts to generate free energy estimates as a function of time
+- 2D_umbrella_plots contains scripts to generate 2D FE contour plots from umbrella sampling data
+- benchmarking contains scripts to generate the plots we show to benchmark our system parameters
+
+all data is contained in the data subdirectory - appropriately named and categorized
+
+the workflow to generate this data is here: (should be here, but this needs a lot more work...to do priority)
+https://github.com/HeydenLabASU-collab/host-guest
+
+or here
+
+/mesa1/bdneff/host-guest_project/host-guest_sample_setup
+
+
+but these should be the same...

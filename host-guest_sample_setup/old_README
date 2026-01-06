@@ -1,0 +1,49 @@
+#!/bin/bash
+
+
+#generate the structure and topology for the system
+gmx_plumed editconf -f complex-trans.pdb -box 8 4 4 -o box.gro
+
+#solvate the box with water
+gmx_plumed solvate -cs -cp box.gro -p fade_charge.top -o solv.gro
+#fade_charge.top is the topology file that indicates the bound guest starts with all of its electrostatics turned on and the unbound starts with them off
+#the host itp file is host-phos.itp
+#the guest with electrostatics initially on is guest1-0.itp and guest0-1.itp is with them off, these are all included in the fade_charge.top
+
+
+#fade_lj.top and fade_final.top specify the initial and final states of other interaction types in our simulations
+gmx_plumed grompp -f em.mdp -c solv.gro -p fade_charge.top -o tmp.tpr -maxwarn 1
+
+#introduce ions into the system
+gmx_plumed genion -s tmp.tpr -p fade_charge.top -neutral -conc 0.01 -o ions.gro
+
+#energy minimization
+gmx_plumed grompp -f em.mdp -c ions.gro -p fade_charge.top -o em.tpr -maxwarn 1
+gmx_plumed mdrun -v -nt 1 -deffnm em
+
+
+gmx_plumed grompp -f equi.mdp -c em.gro -p fade_charge.top -o equi.tpr -n index.ndx -maxwarn 3
+#make index since the next grompp command will ask for it?
+Make Index for 3 coupling Groups
+#this index step I did manually, but should automate
+#the index file contains individual groups for single atoms, so that those atoms can be specified when generating restraints with the pull code in the alchemical mdp files
+#and not sure if there is a good way to automate this, you will likely have to specify those restraints anyway, and should double check that the way/order angles or dihedrals is intended
+
+
+#to run the electrostatics leg of the FE calculation
+mkdir charge
+
+#electrostatics leg of FE calculation
+cd charge
+cp ../alchemical-XXX.mdp
+cp ../
+
+bash ../make_lambdas.sh
+bash ../make_runs.sh
+bash ../run_all.sh
+
+#charge is the switching of electrostatics
+#lj is the switching of lennard-jones interactions
+#final is the switching of orientational restraints on the active ligand
+
+

@@ -1,0 +1,44 @@
+; Include forcefield parameters
+#include "amber14sb-modified.ff/forcefield.itp"
+
+[ atomtypes ]
+;name   bond_type     mass     charge   ptype   sigma         epsilon       Amb
+ HN       HN          0.00000  0.00000   A     1.06908e-01   6.56888e-02 ; 0.60  0.0157
+ NH       NH          0.00000  0.00000   A     3.25000e-01   7.11280e-01 ; 1.82  0.1700
+ C3       C3          12.011   0.00000   A     3.39967e-01   4.57730e-01 ; 1.91  0.1094
+ S6       S6          32.065   0.00000   A     3.56359e-01   1.04600e+00 ; 2.00  0.2500
+; C3       C3          0.00000  0.00000   A     3.39967e-01   4.57730e-01 ; 1.91  0.1094
+; HC       HC          0.00000  0.00000   A     2.64953e-01   6.56888e-02 ; 1.49  0.0157
+; HA       HA          0.00000  0.00000   A     2.59964e-01   6.27600e-02 ; 1.46  0.0150
+; OS       OS          0.00000  0.00000   A     3.00001e-01   7.11280e-01 ; 1.68  0.1700
+ P5       P5          0.00000  0.00000   A     3.74177e-01   8.36800e-01 ; 2.10  0.2000
+ HX       HX          0.00000  0.00000   A     1.95998e-01   6.56888e-02 ; 1.10  0.0157
+ N4       N4          0.00000  0.00000   A     3.25000e-01   7.11280e-01 ; 1.82  0.1700
+
+#include "host-phos.itp"
+
+#include "guest.itp"
+
+; Include water topology
+#include "amber14sb-modified.ff/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "amber14sb-modified.ff/ions.itp"
+
+[ system ]
+; Name
+GRoups of Organic Molecules in ACtion for Science in water
+
+[ molecules ]
+; Compound        #mols
+host              1
+guest             1
+SOL         2120
+NA               3
