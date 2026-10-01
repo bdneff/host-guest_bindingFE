@@ -51,8 +51,8 @@ gen_seed                = -1        ; generate a random seed
 ; Lennard-Jones leg: 20 steps / 21 evenly spaced windows (thesis sec. 3.2.4 and Results)
 free-energy             = yes
 ; Soft-core LJ. The thesis states soft-core potentials were used in this leg to avoid
-; end-point singularities, but the original values were not recovered with these files.
-; The three values below are the commonly used GROMACS settings, NOT confirmed originals.
+; end-point singularities. The original production .mdp was not archived; the values below
+; are the commonly used GROMACS settings, which is what the author recalls using.
 sc-alpha                = 0.5
 sc-power                = 1
 sc-sigma                = 0.3
