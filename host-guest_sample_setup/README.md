@@ -9,8 +9,11 @@ For the overall picture (what is being computed and why the restraints are there
 [top-level README](../README.md). This file is the how-to.
 
 <p align="center">
-  <img src="../docs/img/alchemical_box.png" width="560" alt="Simulation box with the complex and a second, unbound guest copy">
+  <img src="../docs/img/thesis/alchemical_protocol.png" width="760" alt="Alchemical protocol for the electrostatic and Lennard-Jones legs">
 </p>
+
+*The electrostatics (left) and Lennard-Jones (right) legs: the bound guest is switched off while a
+second copy in bulk water is switched on (thesis Fig. 3.5).*
 
 ## 1. What gets computed here
 
