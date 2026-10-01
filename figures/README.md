@@ -43,5 +43,4 @@ only `numpy`, `scipy`, `pandas` and `matplotlib`. Paths inside them are relative
 start Jupyter from the notebook's own directory. Some cells still contain commented-out absolute
 paths from the original machine; they are not used.
 
-A stand-alone script for the 2D maps, with no notebook dependencies, is
-[`../docs/render/plot_2d_free_energy_maps.py`](../docs/render/plot_2d_free_energy_maps.py).
+The finished thesis versions of the main figures are in [`../docs/img/thesis/`](../docs/img/thesis/).

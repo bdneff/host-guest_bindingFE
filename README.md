@@ -36,7 +36,7 @@ calculation, then account for the free energy cost of the restraint.
 
 | | approach | restraints | mean deviation from experiment |
 |---|---|---|---|
-| 0 | **Physical pathway**: steered MD to pull the guest out, then umbrella sampling along the host–guest distance | position restraints only | > 15 kJ/mol in many cases; salt trend not reproduced |
+| 0 | **Physical pathway**: steered MD to pull the guest out, then umbrella sampling along the host–guest distance (figure below) | position restraints only | > 15 kJ/mol in many cases; salt trend not reproduced |
 | 1 | **Alchemical**, centre-of-mass restraints only | none on orientation | 7.25 kJ/mol; not converged at 10 mM |
 | 2 | **Alchemical + orientational restraints** (Boresch-type) | guest orientation | 3.19 kJ/mol |
 | 3 | **Alchemical + orientational restraints + phosphate dihedral restraints**, with a 2D umbrella-sampling correction | guest orientation and Φ₁, Φ₂ | 2.77 kJ/mol; fastest convergence; salt trend reproduced |
@@ -44,15 +44,30 @@ calculation, then account for the free energy cost of the restraint.
 Deviations are averages over the four systems (Lys and Arg guests, 10 mM and 200 mM NaCl) as reported
 in the thesis. Approach 3 is what `host-guest_sample_setup/` implements.
 
+<p align="center">
+  <img src="docs/img/thesis/physical_pathway.png" width="520" alt="Physical pathway: the amino acid pulled out of the tweezer cavity">
+</p>
+
+*The physical pathway of approach 0 (thesis Fig. 3.4): umbrella windows are placed along the path as
+the amino acid is pulled out of the cavity along z. The alchemical approaches replace this path with
+the two end states only:*
+
+<p align="center">
+  <img src="docs/img/thesis/end_states.png" width="680" alt="End states of the unbinding process">
+</p>
+
+*End states of the unbinding process for the phosphate tweezer and Ac-Lys-OMe (thesis Fig. 3.2).*
+
 ## How the alchemical calculation is built
 
 <p align="center">
-  <img src="docs/img/alchemical_box.png" width="620" alt="Simulation box with the complex and a second, unbound guest copy">
+  <img src="docs/img/thesis/alchemical_protocol.png" width="760" alt="Alchemical protocol for the electrostatic and Lennard-Jones legs">
 </p>
 
-*One 80 × 40 × 40 Å box holds the complex (left; bound guest in green) and a second copy of the guest
-40 Å away in bulk water (right, orange). In every alchemical window the bound guest's interactions are
-scaled down while the unbound copy's are scaled up.*
+*Alchemical protocol (thesis Fig. 3.5). One 80 × 40 × 40 Å box holds the complex and a second copy of
+the guest 40 Å away in bulk water. Left: the electrostatics (ES) leg turns the bound guest's charges
+off while turning the unbound copy's on. Right: the Lennard-Jones (LJ) leg does the same for the LJ
+interactions, with all guest charges inactive.*
 
 Switching the two copies in opposite directions means a single simulation returns the
 bound-minus-unbound difference, and the net charge of the box is the same at every λ (the guests
@@ -89,12 +104,13 @@ flowchart TD
 ## Results
 
 <p align="center">
-  <img src="figures/FEP_plots/FEP_results_all_rests.png" width="560" alt="Binding free energy versus sampling time with all restraints">
+  <img src="docs/img/thesis/results_all_restraints.png" width="680" alt="Binding free energy versus sampling time with all restraints">
 </p>
 
-*Predicted ΔG<sub>bind</sub> against sampling time per window with both sets of restraints (approach 3).
-Top row: lysine; bottom row: arginine. Left: 200 mM NaCl; right: 10 mM. Faint lines are the four
-replicas, the solid line their mean, the dashed line the experimental reference.*
+*Predicted ΔG<sub>bind</sub> against sampling time per window with both sets of restraints (approach 3;
+thesis Fig. 3.14). Blue box: lysine; orange box: arginine. Left: 200 mM NaCl; right: 10 mM. Faint
+lines are the four replicas, the solid line their mean with the spread between replicas, the dashed
+line the experimental reference. Insets zoom in on the same data.*
 
 The 2D free energy maps that feed the dihedral correction are shown in
 [`host-guest_sample_setup/sample_2D_us/`](host-guest_sample_setup/sample_2D_us/).
@@ -106,7 +122,7 @@ The 2D free energy maps that feed the dihedral correction are shown in
 | [`host-guest_sample_setup/`](host-guest_sample_setup/) | complete input set for the alchemical calculation (Lys guest; Arg topologies included), with a step-by-step README |
 | [`host-guest_sample_setup/sample_2D_us/`](host-guest_sample_setup/sample_2D_us/) | 2D umbrella sampling of the phosphate dihedrals and how the correction term is computed |
 | [`figures/`](figures/) | notebooks and data behind the thesis figures: free energy vs. time, 2D maps, 100 ns unbiased runs, cost benchmarking |
-| [`docs/`](docs/) | images used in these READMEs and the scripts that regenerate them |
+| [`docs/`](docs/) | images used in these READMEs: thesis figures, and one structure render with its script |
 
 ## Simulation settings at a glance
 

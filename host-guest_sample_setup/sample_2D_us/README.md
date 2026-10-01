@@ -5,23 +5,43 @@ and from it the cost of holding them fixed during the alchemical calculation: th
 ΔG<sub>confine</sub> + ΔG<sub>release</sub> term of the binding free energy (thesis §3.2.5–3.2.6).
 
 <p align="center">
-  <img src="../../docs/img/tweezer_dihedrals.png" width="300" alt="Tweezer with the two C-C-O-P dihedrals highlighted">
+  <img src="../../docs/img/thesis/phosphate_dihedrals.png" width="560" alt="Tweezer with the two C-C-O-P dihedrals highlighted, two views">
 </p>
 
-*The apo tweezer with the four atoms of Φ₁ (magenta: C2–C–O–P) and Φ₂ (cyan: C4–C1–O1–P1)
-highlighted. Each dihedral sets where one phosphate group points.*
+*The tweezer with the two C–C–O–P dihedrals highlighted in cyan, both phosphate groups pointing away
+from the cavity, before and after a 90° rotation about the vertical axis (thesis Fig. 3.7). Each
+dihedral sets where one phosphate group points. In `index.ndx`, Φ₁ is atoms C2–C–O–P (`com1`–`com4`)
+and Φ₂ is C4–C1–O1–P1 (`com5`–`com8`).*
 
 ## Why this is needed
 
 In a 100 ns unbiased run of the lysine complex, one phosphate rotates to coordinate the lysine side
 chain and stays there; transitions in and out are rare. A 10 ns alchemical window cannot sample that
-equilibrium, so the answer depends on which state each window happens to start in. The remedy is a
-two-dimensional version of the confine-and-release method (Mobley et al.):
+equilibrium, so the answer depends on which state each window happens to start in.
+
+<p align="center">
+  <img src="../../docs/img/thesis/phosphate_dihedrals_100ns.png" width="760" alt="The two C-C-O-P dihedrals over a 100 ns simulation">
+</p>
+
+*The two C–C–O–P dihedrals over 100 ns in the tweezer–amino acid complex (thesis Fig. 3.12). Φ₁ is
+the dihedral near the amino acid backbone, Φ₂ the one that coordinates the side chain. Positive
+values: phosphate pointing away from the cavity; negative: toward it.*
+
+The remedy is a two-dimensional version of the confine-and-release method (Mobley et al.):
 
 1. **Confine.** Restrain both dihedrals to one orientation (90°, pointing away from the cavity,
    k = 100 kJ mol⁻¹ rad⁻²) in every alchemical window, so all windows sample the same host state.
 2. **Correct.** Compute what that restraint costs in the bound state and in the unbound state from
    the unrestrained free energy surface G(Φ₁, Φ₂) of each, which is what this directory produces.
+
+<p align="center">
+  <img src="../../docs/img/thesis/dihedral_confine_release.png" width="520" alt="Imposing the dihedral restraints in the bound state and removing them in the unbound state">
+</p>
+
+*The two steps the correction accounts for (thesis Fig. 3.6): the dihedral restraints, marked by the
+paper clip, are imposed in the bound state (top) and removed in the unbound state (bottom).*
+
+How the free energy surfaces are obtained:
 
 ```mermaid
 flowchart LR
@@ -38,13 +58,14 @@ flowchart LR
 ## The free energy surfaces
 
 <p align="center">
-  <img src="../../docs/img/2D_free_energy_maps.png" width="820" alt="2D free energy maps of the two phosphate dihedrals">
+  <img src="../../docs/img/thesis/free_energy_profiles_2D.png" width="860" alt="2D free energy profiles of the two phosphate dihedrals">
 </p>
 
-*G(Φ₁, Φ₂) for the apo tweezer and the lysine and arginine complexes at 10 mM and 200 mM NaCl
-(WHAM-2D, 64 windows × 10 ns each). Binding a guest restricts the phosphates sharply: large regions
-that the apo host visits freely lie more than 30 kJ/mol above the minimum in the complexes. Data:
-`figures/data/2D_umbrella_results/`; regenerate with `docs/render/plot_2d_free_energy_maps.py`.*
+*G(Φ₁, Φ₂) for the apo tweezer (DRG) and the lysine and arginine complexes at 10 mM and 200 mM NaCl
+(thesis Fig. 3.13; WHAM-2D, 64 windows × 10 ns each). Binding a guest restricts the phosphates
+sharply: large regions that the apo host visits freely lie more than 30 kJ/mol above the minimum in
+the complexes. The structure above each column shows the configuration at the circled point. Data:
+`figures/data/2D_umbrella_results/`; plotting code: `figures/2D_umbrella_plots/`.*
 
 ## From the surface to the correction
 
